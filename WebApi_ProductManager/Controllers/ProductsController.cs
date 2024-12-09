@@ -18,29 +18,33 @@ namespace WebApi_ProductManager.Controllers
 		[HttpGet]
 		public async Task<IActionResult> GetAllProducts()
 		{
-			var products = await _context.products
+			var products = await _context.Products
 				.FromSqlRaw("EXEC sp_GetAllProducts")
 				.ToListAsync();
 			return Ok(products);
 		}
 		// GET: /api/products/{id}
 		[HttpGet("{id}")]
-		public IActionResult GetProductById(int id)
+		public async Task<IActionResult> GetProductById(int id)
 		{
-			var products = _context.products
+			var product = (await _context.Products
 			.FromSqlRaw("EXEC sp_GetProductById @ProductId = {0}", id)
-			.ToList();
+			.ToListAsync()).FirstOrDefault();
 
-			if (products.Count == 0)
+			if (product == null)
 			{
 				return NotFound();
 			}
-			return Ok(products);
+			return Ok(product);
 		}
 		// POST: /api/products
 		[HttpPost]
 		public async Task<IActionResult> Add(Product productmodel)
 		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
 			try
 			{
 				var product = new Product
@@ -62,12 +66,16 @@ namespace WebApi_ProductManager.Controllers
 		[HttpPut("{id}")]
 		public async Task<IActionResult> UpdateProductById(int id, Product product)
 		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
 			if (id != product.ProductId)
 			{
 				return BadRequest("Product ID does not match.");
 			}
 
-			var existingProduct = await _context.products.FindAsync(id);
+			var existingProduct = await _context.Products.FindAsync(id);
 			if (existingProduct == null)
 			{
 				return NotFound();
@@ -77,7 +85,7 @@ namespace WebApi_ProductManager.Controllers
 			existingProduct.Price = product.Price;
 			existingProduct.StockQuantity = product.StockQuantity;
 
-			_context.products.Update(existingProduct);
+			_context.Products.Update(existingProduct);
 			await _context.SaveChangesAsync();
 			return NoContent();
 		}
@@ -87,16 +95,16 @@ namespace WebApi_ProductManager.Controllers
 		{
 			try
 			{
-				var product = await _context.products.FindAsync(id);
+				var product = await _context.Products.FindAsync(id);
 				if (product == null)
 				{
 					return NotFound(new { message = $"Product with ID {id} not found." });
 				}
 
-				_context.products.Remove(product);
+				_context.Products.Remove(product);
 				await _context.SaveChangesAsync();
 
-				return Ok();
+				return Ok(new { message = $"Product with ID {id} deleted successfully." });
 			}
 			catch (Exception ex)
 			{

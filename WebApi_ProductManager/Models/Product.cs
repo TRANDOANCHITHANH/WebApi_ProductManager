@@ -7,6 +7,7 @@ namespace WebApi_ProductManager.Models
 	public class Product
 	{
 		[Key]
+		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public int ProductId { get; set; }
 		[Required]
 		[MaxLength(100)]
