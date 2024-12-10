@@ -70,11 +70,6 @@ namespace WebApi_ProductManager.Controllers
 			{
 				return BadRequest(ModelState);
 			}
-			if (id != product.ProductId)
-			{
-				return BadRequest("Product ID does not match.");
-			}
-
 			var existingProduct = await _context.Products.FindAsync(id);
 			if (existingProduct == null)
 			{
@@ -87,7 +82,7 @@ namespace WebApi_ProductManager.Controllers
 
 			_context.Products.Update(existingProduct);
 			await _context.SaveChangesAsync();
-			return NoContent();
+			return Ok(new { message = $"Product with ID {id} updated successfully." });
 		}
 		// DELETE: /api/products/{id}
 		[HttpDelete("{id}")]
